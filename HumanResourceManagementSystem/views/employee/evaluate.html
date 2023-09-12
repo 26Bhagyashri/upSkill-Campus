@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidate Evaluation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #007BFF;
+        }
+
+        .candidate-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .candidate-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+        }
+
+        .candidate-info {
+            flex-grow: 1;
+        }
+
+        .candidate-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .accept-button, .reject-button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .accept-button {
+            background-color: #5cb85c;
+            color: #fff;
+            margin-right: 10px;
+        }
+
+        .reject-button {
+            background-color: #d9534f;
+            color: #fff;
+        }
+
+        .accept-button:hover {
+            background-color: #4aaf4a;
+        }
+
+        .reject-button:hover {
+            background-color: #c9302c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Candidate Evaluation</h1>
+
+        <div id="candidateList">
+            <!-- Candidate data will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        // Retrieve the array of candidate data from local storage
+        let candidates = JSON.parse(localStorage.getItem('candidates')) || [];
+
+        // Display all candidate data on the page
+        const candidateList = document.getElementById('candidateList');
+
+        candidates.forEach((candidateData, index) => {
+            const candidateInfo = document.createElement('div');
+            candidateInfo.classList.add('candidate-item');
+            candidateInfo.innerHTML = `
+                <div class="candidate-info">
+                    <h3>${candidateData.candidateName}</h3>
+                    <p>Email: ${candidateData.email}</p>
+                    <p>Applied Position: ${candidateData.appliedPosition}</p>
+                    <p>Contact: ${candidateData.contact}</p>
+                </div>
+                <div class="candidate-actions">
+                    <button class="accept-button" onclick="makeDecision('Accepted', ${index})">Accept</button>
+                    <button class="reject-button" onclick="makeDecision('Rejected', ${index})">Reject</button>
+                </div>
+            `;
+            candidateList.appendChild(candidateInfo);
+        });
+
+        async function makeDecision(decision, index) {
+            // Update the candidate data with the decision
+            candidates[index].decision = decision;
+
+            // Store the updated candidate data in local storage
+            localStorage.setItem('candidates', JSON.stringify(candidates));
+
+            // Remove the candidate from the list
+            const candidateInfo = document.querySelector(`#candidateList .candidate-item:nth-child(${index + 1})`);
+            if (candidateInfo) {
+                candidateInfo.remove();
+            }
+
+            // If accepted, send data to API Gateway
+            if (decision === 'Accepted') {
+                try {
+                    const response = await fetch('https://jhu9w2oz19.execute-api.ap-south-1.amazonaws.com/hrms/', {
+                        method: 'POST',
+                        body: JSON.stringify(candidates[index]), // Send candidate data to API Gateway
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    if (response.ok) {
+                        alert(`Candidate ${index + 1} Accepted and Data Sent to DynamoDB`);
+                    } else {
+                        alert('Failed to send data to DynamoDB');
+                    }
+                } catch (error) {
+                    console.error('Error sending data to DynamoDB:', error);
+                    alert('Error sending data to DynamoDB');
+                }
+            } else if (decision === 'Rejected') {
+                // If rejected, remove the candidate from the list permanently
+                candidates.splice(index, 1);
+                localStorage.setItem('candidates', JSON.stringify(candidates));
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #007BFF;
+    }
+
+    .candidate-list {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    .candidate-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        background-color: #f9f9f9;
+    }
+
+    .candidate-info {
+        flex-grow: 1;
+    }
+
+    .candidate-actions {
+        display: flex;
+        align-items: center;
+    }
+
+    .accept-button, .reject-button {
+        padding: 5px 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background-color 0.3s ease;
+    }
+
+    .accept-button {
+        background-color: #5cb85c;
+        color: #fff;
+        margin-right: 10px;
+    }
+
+    .reject-button {
+        background-color: #d9534f;
+        color: #fff;
+    }
+
+    .accept-button:hover {
+        background-color: #4aaf4a;
+    }
+
+    .reject-button:hover {
+        background-color: #c9302c;
+    }
+</style>
+
+
+
+
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #007BFF;
+    }
+
+    form {
+        text-align: left;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: bold;
+    }
+
+    input[type="text"], input[type="email"], textarea {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    input[type="file"] {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .file-input-container {
+        display: flex;
+        flex-direction: column;
+    }
+
+    button {
+        background-color: #007BFF;
+        color: #fff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    button:hover {
+        background-color: #0056b3;
+    }
+
+    .decision-container {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .accept-button {
+        background-color: #5cb85c;
+    }
+
+    .reject-button {
+        background-color: #d9534f;
+    }
+</style>
